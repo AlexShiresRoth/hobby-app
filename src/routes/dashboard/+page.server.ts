@@ -1,5 +1,5 @@
 import { OPEN_AI_KEY, OPEN_AI_ORG, OPEN_AI_PROJECT } from '$env/static/private';
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import OpenAI from 'openai';
 import { z } from 'zod';
 import type { Actions, PageServerLoad } from './$types';
@@ -47,4 +47,17 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
 	return { session, profile };
 };
 
-export const actions: Actions = {};
+export const actions: Actions = {
+	generate: async ({ request, locals: { safeGetSession } }) => {
+		const session = await safeGetSession();
+		if (!session) {
+			return fail(400, {
+				message: 'Unauthorized'
+			});
+		}
+
+		const formData = await request.formData();
+
+		console.log('answer blob', JSON.parse(formData.get('answerBlob') as string));
+	}
+};
