@@ -2,8 +2,20 @@
 	import { enhance } from '$app/forms';
 	import Questions from '$lib/components/Questions.svelte';
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import { LoaderPinwheelIcon } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
+	import { z } from 'zod';
+
+	const ResponseSchema = z.object({
+		description: z.string(),
+		equipment_needed: z.string(),
+		hobby: z.string(),
+		social_aspect: z.string(),
+		time_commitement: z.string()
+	});
+
+	type HobbyDetails = z.infer<typeof ResponseSchema>;
 
 	type Question = {
 		question: string;
@@ -20,7 +32,11 @@
 	let interval: NodeJS.Timeout;
 	let questionIndex = 0;
 	let questionMap = new Map();
+	let generationError;
+	let hobbySuggestion: HobbyDetails;
+	let generating = false;
 
+	// TODO add response to UI
 	const questions: Question[] = [
 		{
 			name: 'questionOne',
@@ -40,6 +56,32 @@
 				{ id: 6, label: 'Suburbs', answer: 'lives in the suburbs' },
 				{ id: 7, label: 'City', answer: 'lives in the city' },
 				{ id: 8, label: 'Beach', answer: 'lives in a beach area' }
+			]
+		},
+		{
+			name: 'questionThree',
+			question: 'How would you best describe your personality?',
+			answers: [
+				{
+					id: 9,
+					label: 'Introverted',
+					answer: 'introverted personality'
+				},
+				{
+					id: 10,
+					label: 'Extroverted',
+					answer: 'extroverted personality'
+				},
+				{
+					id: 11,
+					label: 'Introverted but trying to branch out',
+					answer: 'introverted but trying to become more extroverted'
+				},
+				{
+					id: 12,
+					label: 'Extroverted but should relax a little bit',
+					answer: 'extroverted but wants to learn to do some things alone'
+				}
 			]
 		}
 	];
@@ -68,7 +110,19 @@
 	}
 
 	const handleFormSubmit: SubmitFunction = () => {
-		return async ({ update, result }) => {};
+		generating = true;
+		return async ({ update, result }) => {
+			await update();
+			if (result.type === 'error') {
+				generationError = result;
+				generating = false;
+			}
+			if (result.type === 'success') {
+				const data = result.data as { suggestion: HobbyDetails };
+				generating = false;
+				hobbySuggestion = data.suggestion;
+			}
+		};
 	};
 
 	onMount(() => {
@@ -114,18 +168,28 @@
 							name="answerBlob"
 						/>
 					{/key}
-					{#key questionIndex}
-						<div class="flex flex-col gap-4">
-							<Questions
-								question={questions[questionIndex]}
-								currentIndex={questionIndex}
-								maxIndex={questions.length}
-								{handleQuestionChange}
-								handleAnswerSelection={setQuestionAnswerInState}
-								currentAnswerState={questionMap}
-							/>
-						</div>
-					{/key}
+					{#if !hobbySuggestion}
+						{#if !generating}
+							{#key questionIndex}
+								<div class="flex flex-col gap-4">
+									<Questions
+										question={questions[questionIndex]}
+										currentIndex={questionIndex}
+										maxIndex={questions.length}
+										{handleQuestionChange}
+										handleAnswerSelection={setQuestionAnswerInState}
+										currentAnswerState={questionMap}
+									/>
+								</div>
+							{/key}
+						{:else}
+							<div><LoaderPinwheelIcon class="animate-spin" /></div>
+						{/if}
+					{/if}
+
+					<!-- {#if hobbyChoices && !generating}
+						<div>{hobbyChoices}</div>
+					{/if} -->
 				</form>
 			{/if}
 		{/if}

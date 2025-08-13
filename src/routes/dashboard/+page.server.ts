@@ -1,6 +1,7 @@
 import { OPEN_AI_KEY, OPEN_AI_ORG, OPEN_AI_PROJECT } from '$env/static/private';
 import { fail, redirect } from '@sveltejs/kit';
 import OpenAI from 'openai';
+import { zodTextFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -10,25 +11,12 @@ const openai = new OpenAI({
 	project: OPEN_AI_PROJECT
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const SearchResultSchema = z.object({
-	position: z.number(),
-	title: z.string(),
-	product_link: z.string().url(),
-	redirect_link: z.string().url(),
-	displayed_link: z.string(),
-	thumbnail: z.string().url(),
-	favicon: z.string().url(),
-	snippet: z.string(),
-	snippet_highlighted_words: z.array(z.string()),
-	rich_snippet: z.object({
-		bottom: z.object({
-			detected_extensions: z.record(z.any()).optional(),
-			extensions: z.array(z.string())
-		})
-	}),
-	price: z.string(),
-	source: z.string()
+const ResponseSchema = z.object({
+	description: z.string(),
+	equipment_needed: z.string(),
+	hobby: z.string(),
+	social_aspect: z.string(),
+	time_commitement: z.string()
 });
 
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
@@ -57,7 +45,35 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
+		const questionsAndAnswers = JSON.parse((formData.get('answerBlob') as string) || '{}');
 
-		console.log('answer blob', JSON.parse(formData.get('answerBlob') as string));
+		if (!questionsAndAnswers) {
+			return fail(400, {
+				message: 'Missing user input'
+			});
+		}
+
+		const structuredInput: { question: string; answer: string }[] = [];
+
+		for (const [key, value] of Object.entries(questionsAndAnswers)) {
+			structuredInput.push({ question: key, answer: `${value}` });
+		}
+
+		const response = await openai.responses.parse({
+			model: 'gpt-4o',
+			input: [
+				{
+					role: 'system',
+					content: 'You are a helpful assistant that recommends new hobbies.'
+				},
+				{
+					role: 'user',
+					content: `Here is the user's survey data:\n${JSON.stringify(structuredInput)}\nSuggest a hobby in structured JSON format.`
+				}
+			],
+			text: { format: zodTextFormat(ResponseSchema, 'hobby') }
+		});
+
+		return { suggestion: response.output_parsed };
 	}
 };
