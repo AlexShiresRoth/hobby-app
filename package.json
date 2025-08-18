@@ -1,5 +1,5 @@
 {
-	"name": "gravy-app",
+	"name": "hobby-suggestion",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -26,7 +26,7 @@
 		"@testing-library/svelte": "^5.2.4",
 		"autoprefixer": "^10.4.21",
 		"dotenv": "^16.5.0",
-		"drizzle-kit": "^0.31.1",
+		"drizzle-kit": "^0.31.4",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
 		"eslint-plugin-svelte": "^3.0.0",
@@ -54,11 +54,10 @@
 		"@supabase/supabase-js": "^2.49.8",
 		"clsx": "^2.1.1",
 		"date-fns": "^4.1.0",
-		"drizzle-orm": "^0.44.2",
+		"drizzle-orm": "^0.44.4",
 		"lucide-svelte": "^0.513.0",
 		"openai": "^5.1.1",
 		"postgres": "^3.4.7",
-		"serpapi": "^2.1.0",
 		"svelte-french-toast": "^1.2.0",
 		"zod": "^3.25.56"
 	}

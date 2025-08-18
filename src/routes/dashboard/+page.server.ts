@@ -67,5 +67,23 @@ export const actions: Actions = {
 		});
 
 		return { suggestion: response.output_parsed };
+	},
+	saveProfile: async ({ request, locals: { supabase, safeGetSession } }) => {
+		const session = await safeGetSession();
+		if (!session) {
+			return fail(400, {
+				message: 'Unauthorized'
+			});
+		}
+
+		const formData = await request.formData();
+		const questionsAndAnswers = JSON.parse((formData.get('profileBlob') as string) || '{}');
+
+		if (!questionsAndAnswers) {
+			return fail(400, {
+				message: 'Missing user input'
+			});
+		}
+		// TODO need to pass saved hobby and answers to this route
 	}
 };
