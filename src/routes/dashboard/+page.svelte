@@ -5,13 +5,8 @@
 	import { LoaderPinwheelIcon } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
+	import { questions } from '../../questions';
 	import type { HobbySuggestion } from '../../types';
-
-	type Question = {
-		question: string;
-		answers: Array<{ id: number; label: string; answer: string }>;
-		name: string;
-	};
 
 	const ideas = ['new?', 'unique?', 'creative?', 'adventurous?', 'technical?'];
 
@@ -25,85 +20,11 @@
 	let generationError;
 	let hobbySuggestion: HobbySuggestion;
 	let generating = false;
+	let saving = false;
 
 	// TODO add response to UI
 	// TODO need to save previously answered questions to user profile
 	// TODO use the saved data to quickly generate new hobby suggestion
-	const questions: Question[] = [
-		{
-			name: 'questionOne',
-			question: 'How much time do you want to spend on a new hobby per/week?',
-			answers: [
-				{ id: 1, label: '<= 1hr', answer: 'less than 1 hour' },
-				{ id: 2, label: '<= 4hrs', answer: 'less than 4 hours' },
-				{ id: 3, label: '<= 8hrs', answer: 'less than 8 hours' },
-				{ id: 4, label: 'All I got is time baby', answer: 'All the time in the world' }
-			]
-		},
-		{
-			name: 'questionTwo',
-			question: 'What kind of environment do you live in?',
-			answers: [
-				{ id: 5, label: 'Rural', answer: 'lives in rural environment' },
-				{ id: 6, label: 'Suburbs', answer: 'lives in the suburbs' },
-				{ id: 7, label: 'City', answer: 'lives in the city' },
-				{ id: 8, label: 'Beach', answer: 'lives in a beach area' }
-			]
-		},
-		{
-			name: 'questionThree',
-			question: 'How would you best describe your personality?',
-			answers: [
-				{
-					id: 9,
-					label: 'Introverted',
-					answer: 'introverted personality'
-				},
-				{
-					id: 10,
-					label: 'Extroverted',
-					answer: 'extroverted personality'
-				},
-				{
-					id: 11,
-					label: 'Introverted but trying to branch out',
-					answer: 'introverted but trying to become more extroverted'
-				},
-				{
-					id: 12,
-					label: 'Extroverted but should relax a little bit',
-					answer: 'extroverted but wants to learn to do some things alone'
-				}
-			]
-		},
-		{
-			name: 'questionFour',
-			question: 'How much money would you prefer to spend on this new hobby',
-			answers: [
-				{
-					id: 13,
-					label: '$0',
-					answer: 'no money'
-				},
-				{
-					id: 14,
-					label: 'I can spare a few bucks',
-					answer: 'not much, if at all'
-				},
-				{
-					id: 15,
-					label: 'A modest amount',
-					answer: 'can spend a good chunk of change'
-				},
-				{
-					id: 16,
-					label: 'As much as I need to',
-					answer: 'can be an expensive hobby'
-				}
-			]
-		}
-	];
-
 	(function () {
 		for (const q of questions) {
 			questionMap.set(q.question, '');
@@ -139,6 +60,16 @@
 				const data = result.data as { suggestion: HobbySuggestion };
 				generating = false;
 				hobbySuggestion = data.suggestion;
+			}
+		};
+	};
+
+	const handleSaveProfile: SubmitFunction = () => {
+		saving = true;
+		return async ({ update, result }) => {
+			await update();
+			if (result.type === 'error') {
+				saving = false;
 			}
 		};
 	};
@@ -206,21 +137,38 @@
 							</div>
 						{/if}
 					{/if}
-
-					{#if hobbySuggestion && !generating}
-						<div class="flex w-1/2 flex-col gap-2">
-							<h2 class="text-2xl font-bold">{hobbySuggestion.hobby}</h2>
-							<p>{hobbySuggestion.description}</p>
-							<p>{hobbySuggestion.social_aspect}</p>
-							<p>{hobbySuggestion.time_commitement}</p>
-							<p>{hobbySuggestion.equipment_needed}</p>
-							<p>{hobbySuggestion.expense_amt}</p>
-							<a href={hobbySuggestion.resource_link} target="_blank" rel="noopener noreferer"
-								>More info</a
-							>
-						</div>
-					{/if}
 				</form>
+
+				{#if hobbySuggestion && !generating}
+					<div class="flex w-1/2 flex-col gap-2">
+						<h2 class="text-2xl font-bold">{hobbySuggestion.hobby}</h2>
+						<p>{hobbySuggestion.description}</p>
+						<p>{hobbySuggestion.social_aspect}</p>
+						<p>{hobbySuggestion.time_commitement}</p>
+						<p>{hobbySuggestion.equipment_needed}</p>
+						<p>{hobbySuggestion.expense_amt}</p>
+						<a href={hobbySuggestion.resource_link} target="_blank" rel="noopener noreferer"
+							>More info</a
+						>
+						<form action="?/saveProfile" use:enhance={handleSaveProfile} method="POST">
+							<input
+								type="text"
+								name="profileBlob"
+								value={JSON.stringify(convertMapToObject(questionMap))}
+								readonly
+								class="hidden"
+							/>
+							<input
+								type="text"
+								name="hobbySuggestion"
+								readonly
+								class="hidden"
+								value={JSON.stringify(hobbySuggestion)}
+							/>
+							<button type="submit">Try out hobby</button>
+						</form>
+					</div>
+				{/if}
 			{/if}
 		{/if}
 	</div>

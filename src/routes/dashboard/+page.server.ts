@@ -2,7 +2,8 @@ import { OPEN_AI_KEY, OPEN_AI_ORG, OPEN_AI_PROJECT } from '$env/static/private';
 import { fail, redirect } from '@sveltejs/kit';
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
-import { ResponseSchema } from '../../types';
+import type { Question } from '../../questions';
+import { ResponseSchema, type HobbySuggestion } from '../../types';
 import type { Actions, PageServerLoad } from './$types';
 
 const openai = new OpenAI({
@@ -77,13 +78,24 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
-		const questionsAndAnswers = JSON.parse((formData.get('profileBlob') as string) || '{}');
+		const questionsAndAnswers: { [key: Question['question']]: Question['answers'][0] } =
+			JSON.parse((formData.get('profileBlob') as string) || '') || null;
+		const hobbySuggestion: HobbySuggestion =
+			JSON.parse((formData.get('hobbySuggestion') as string) || '') || null;
+		console.log('questions and answers', questionsAndAnswers, 'hobby', hobbySuggestion);
 
-		if (!questionsAndAnswers) {
+		if (!questionsAndAnswers || !hobbySuggestion) {
 			return fail(400, {
 				message: 'Missing user input'
 			});
 		}
+
+		// TODO - how can i find the question based on the answer provided, maybe we need to provide a better object in the request
+
+		// await db.update(hobbyProfiles).set({
+
+		// })
+
 		// TODO need to pass saved hobby and answers to this route
 	}
 };
