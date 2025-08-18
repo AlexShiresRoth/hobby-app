@@ -5,17 +5,7 @@
 	import { LoaderPinwheelIcon } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { z } from 'zod';
-
-	const ResponseSchema = z.object({
-		description: z.string(),
-		equipment_needed: z.string(),
-		hobby: z.string(),
-		social_aspect: z.string(),
-		time_commitement: z.string()
-	});
-
-	type HobbyDetails = z.infer<typeof ResponseSchema>;
+	import type { HobbySuggestion } from '../../types';
 
 	type Question = {
 		question: string;
@@ -33,10 +23,12 @@
 	let questionIndex = 0;
 	let questionMap = new Map();
 	let generationError;
-	let hobbySuggestion: HobbyDetails;
+	let hobbySuggestion: HobbySuggestion;
 	let generating = false;
 
 	// TODO add response to UI
+	// TODO need to save previously answered questions to user profile
+	// TODO use the saved data to quickly generate new hobby suggestion
 	const questions: Question[] = [
 		{
 			name: 'questionOne',
@@ -83,6 +75,32 @@
 					answer: 'extroverted but wants to learn to do some things alone'
 				}
 			]
+		},
+		{
+			name: 'questionFour',
+			question: 'How much money would you prefer to spend on this new hobby',
+			answers: [
+				{
+					id: 13,
+					label: '$0',
+					answer: 'no money'
+				},
+				{
+					id: 14,
+					label: 'I can spare a few bucks',
+					answer: 'not much, if at all'
+				},
+				{
+					id: 15,
+					label: 'A modest amount',
+					answer: 'can spend a good chunk of change'
+				},
+				{
+					id: 16,
+					label: 'As much as I need to',
+					answer: 'can be an expensive hobby'
+				}
+			]
 		}
 	];
 
@@ -118,7 +136,7 @@
 				generating = false;
 			}
 			if (result.type === 'success') {
-				const data = result.data as { suggestion: HobbyDetails };
+				const data = result.data as { suggestion: HobbySuggestion };
 				generating = false;
 				hobbySuggestion = data.suggestion;
 			}
@@ -156,19 +174,19 @@
 				{/key}
 			{:else}
 				<form in:fly={{ y: 40 }} use:enhance={handleFormSubmit} action="?/generate" method="POST">
-					<h2 class="mb-4 text-4xl font-bold">
-						Alright! Let's try and get to know you a bit more, first
-					</h2>
-					{#key questionMap}
-						<input
-							readonly
-							class="hidden"
-							type="text"
-							value={JSON.stringify(convertMapToObject(questionMap))}
-							name="answerBlob"
-						/>
-					{/key}
 					{#if !hobbySuggestion}
+						<h2 class="mb-4 text-4xl font-bold">
+							Alright! Let's try and get to know you a bit more, first
+						</h2>
+						{#key questionMap}
+							<input
+								readonly
+								class="hidden"
+								type="text"
+								value={JSON.stringify(convertMapToObject(questionMap))}
+								name="answerBlob"
+							/>
+						{/key}
 						{#if !generating}
 							{#key questionIndex}
 								<div class="flex flex-col gap-4">
@@ -183,13 +201,25 @@
 								</div>
 							{/key}
 						{:else}
-							<div><LoaderPinwheelIcon class="animate-spin" /></div>
+							<div>
+								<LoaderPinwheelIcon class="animate-spin" size={24} />
+							</div>
 						{/if}
 					{/if}
 
-					<!-- {#if hobbyChoices && !generating}
-						<div>{hobbyChoices}</div>
-					{/if} -->
+					{#if hobbySuggestion && !generating}
+						<div class="flex w-1/2 flex-col gap-2">
+							<h2 class="text-2xl font-bold">{hobbySuggestion.hobby}</h2>
+							<p>{hobbySuggestion.description}</p>
+							<p>{hobbySuggestion.social_aspect}</p>
+							<p>{hobbySuggestion.time_commitement}</p>
+							<p>{hobbySuggestion.equipment_needed}</p>
+							<p>{hobbySuggestion.expense_amt}</p>
+							<a href={hobbySuggestion.resource_link} target="_blank" rel="noopener noreferer"
+								>More info</a
+							>
+						</div>
+					{/if}
 				</form>
 			{/if}
 		{/if}

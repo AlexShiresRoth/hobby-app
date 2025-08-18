@@ -2,21 +2,13 @@ import { OPEN_AI_KEY, OPEN_AI_ORG, OPEN_AI_PROJECT } from '$env/static/private';
 import { fail, redirect } from '@sveltejs/kit';
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
-import { z } from 'zod';
+import { ResponseSchema } from '../../types';
 import type { Actions, PageServerLoad } from './$types';
 
 const openai = new OpenAI({
 	apiKey: OPEN_AI_KEY,
-	organization: OPEN_AI_ORG, // TODO add these to env vars
+	organization: OPEN_AI_ORG,
 	project: OPEN_AI_PROJECT
-});
-
-const ResponseSchema = z.object({
-	description: z.string(),
-	equipment_needed: z.string(),
-	hobby: z.string(),
-	social_aspect: z.string(),
-	time_commitement: z.string()
 });
 
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
