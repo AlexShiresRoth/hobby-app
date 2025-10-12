@@ -1,0 +1,2 @@
+ALTER TABLE "questionsWithAnswers" ALTER COLUMN "question" SET NOT NULL;--> statement-breakpoint
+ALTER TABLE "questionsWithAnswers" ADD CONSTRAINT "questionsWithAnswers_question_unique" UNIQUE("question");

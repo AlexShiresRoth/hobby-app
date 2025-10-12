@@ -2,7 +2,9 @@ import { OPEN_AI_KEY, OPEN_AI_ORG, OPEN_AI_PROJECT } from '$env/static/private';
 import { fail, redirect } from '@sveltejs/kit';
 import OpenAI from 'openai';
 import { zodTextFormat } from 'openai/helpers/zod';
-import type { Question } from '../../questions';
+import { db } from '../../db';
+import { questions, type Question } from '../../questions';
+import { hobbyProfiles, hobbyQuestionsAndAnswers, questionsWithAnswers } from '../../schema';
 import { ResponseSchema, type HobbySuggestion } from '../../types';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -69,8 +71,9 @@ export const actions: Actions = {
 
 		return { suggestion: response.output_parsed };
 	},
-	saveProfile: async ({ request, locals: { supabase, safeGetSession } }) => {
+	saveProfile: async ({ request, locals: { safeGetSession } }) => {
 		const session = await safeGetSession();
+
 		if (!session) {
 			return fail(400, {
 				message: 'Unauthorized'
@@ -78,24 +81,75 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
-		const questionsAndAnswers: { [key: Question['question']]: Question['answers'][0] } =
+		const questionsAndAnswers: { [key: Question['question']]: Question['answers'][0]['answer'] } =
 			JSON.parse((formData.get('profileBlob') as string) || '') || null;
 		const hobbySuggestion: HobbySuggestion =
 			JSON.parse((formData.get('hobbySuggestion') as string) || '') || null;
-		console.log('questions and answers', questionsAndAnswers, 'hobby', hobbySuggestion);
 
-		if (!questionsAndAnswers || !hobbySuggestion) {
+		if (!hobbySuggestion) {
 			return fail(400, {
 				message: 'Missing user input'
 			});
 		}
 
-		// TODO - how can i find the question based on the answer provided, maybe we need to provide a better object in the request
+		const matchedQuestions = Object.entries(questionsAndAnswers).map(([question, answer]) => {
+			const foundQ = questions.find((q) => q.question === question);
 
-		// await db.update(hobbyProfiles).set({
+			if (!foundQ) throw new Error('Something went wrong saving hobby suggestion');
 
-		// })
+			return { questionKey: foundQ.name, question: foundQ.question, answer };
+		});
 
-		// TODO need to pass saved hobby and answers to this route
+		const [hobbyToTry] = await db
+			.insert(hobbyProfiles)
+			.values({
+				timeCommitment: hobbySuggestion.time_commitement,
+				hobbySpend: hobbySuggestion.expense_amt,
+				description: hobbySuggestion.description,
+				personality: hobbySuggestion.social_aspect,
+				livingEnvironment: hobbySuggestion.living_environment,
+				hobbyName: hobbySuggestion.hobby
+			})
+			.returning({ id: hobbyProfiles.id })
+			.onConflictDoNothing();
+
+		// only update/create user profile if first time going through it
+		if (questionsAndAnswers) {
+			const questionIds = await Promise.all(
+				matchedQuestions.map(async (qwa) => {
+					const [row] = await db
+						.insert(questionsWithAnswers)
+						.values({
+							name: qwa.question,
+							question: qwa.questionKey,
+							answer: qwa.answer
+						})
+						.onConflictDoUpdate({
+							target: questionsWithAnswers.question,
+							set: { answer: qwa.answer, question: qwa.questionKey, name: qwa.question }
+						})
+						.returning({ id: questionsWithAnswers.id });
+
+					return row.id;
+				})
+			);
+
+			await Promise.all(
+				questionIds.map(async (qid) => {
+					await db
+						.insert(hobbyQuestionsAndAnswers)
+						.values({
+							questionWithAnswerId: qid,
+							hobbyProfileId: hobbyToTry.id
+						})
+						.onConflictDoUpdate({
+							target: hobbyQuestionsAndAnswers.questionWithAnswerId,
+							set: { questionWithAnswerId: qid }
+						});
+				})
+			);
+		}
+
+		return { hobbyId: hobbyToTry.id };
 	}
 };

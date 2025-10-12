@@ -8,6 +8,34 @@
       "when": 1755506934340,
       "tag": "0000_careful_queen_noir",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1760302882205,
+      "tag": "0001_many_proteus",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760303609509,
+      "tag": "0002_thin_meteorite",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1760305476399,
+      "tag": "0003_spotty_redwing",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1760306800119,
+      "tag": "0004_huge_black_crow",
+      "breakpoints": true
     }
   ]
 }

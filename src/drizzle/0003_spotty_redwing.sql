@@ -1,0 +1,6 @@
+ALTER TABLE "hobbyQuestionsAndAnswers" ALTER COLUMN "questions_with_answers_id" SET DATA TYPE uuid;--> statement-breakpoint
+ALTER TABLE "hobbyQuestionsAndAnswers" ALTER COLUMN "questions_with_answers_id" SET NOT NULL;--> statement-breakpoint
+ALTER TABLE "hobbyQuestionsAndAnswers" ADD COLUMN "hobby_profile_id" uuid NOT NULL;--> statement-breakpoint
+ALTER TABLE "hobbyQuestionsAndAnswers" ADD CONSTRAINT "hobbyQuestionsAndAnswers_hobby_profile_id_hobbyProfiles_id_fk" FOREIGN KEY ("hobby_profile_id") REFERENCES "public"."hobbyProfiles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "hobbyQuestionsAndAnswers" ADD CONSTRAINT "hobbyQuestionsAndAnswers_questions_with_answers_id_questionsWithAnswers_id_fk" FOREIGN KEY ("questions_with_answers_id") REFERENCES "public"."questionsWithAnswers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "unique_hobby_question" ON "hobbyQuestionsAndAnswers" USING btree ("questions_with_answers_id");

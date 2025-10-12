@@ -1,0 +1,1 @@
+ALTER TABLE "hobbyProfiles" ADD COLUMN "hobby_name" text;

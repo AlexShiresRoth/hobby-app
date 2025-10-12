@@ -31,6 +31,7 @@
 		<nav class="flex w-full items-center justify-between">
 			<div class="flex items-center gap-4">
 				<a href="/dashboard">Dashboard</a>
+				<a href="/dashboard/hobby">Hobbies</a>
 				<a href="/dashboard/profile">Profile</a>
 			</div>
 			<form method="POST" action="/auth/sign-out">

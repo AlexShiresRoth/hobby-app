@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import SelectInput from '$lib/components/SelectInput.svelte';
 	import { TextInput } from '$lib/index.js';
 	import { Loader } from 'lucide-svelte';
 	import type { TProfile } from '../../../schema.js';
@@ -15,16 +14,13 @@
 	let formData = {
 		full_name: profile?.full_name ?? '',
 		avatar_url: profile?.avatar_url ?? '',
-		username: profile?.username ?? '',
-		phone: profile?.phone ?? '',
-		style_preference: profile?.style_preference ?? '',
-		custom_style_preference: profile?.custom_style_preference ?? ''
+		username: profile?.username ?? ''
 	};
 </script>
 
 <h1 class="text-4xl font-bold">Account Settings</h1>
 
-<div class="w-3xl mt-8 flex flex-col gap-4">
+<div class="mt-8 flex w-3xl flex-col gap-4">
 	<h3 class="text-2xl">
 		Let's get to know you better, in order to provide you with the best possible results.
 	</h3>
@@ -49,10 +45,7 @@
 					formData = {
 						full_name: fullName,
 						avatar_url: avatar,
-						username: userName,
-						phone,
-						style_preference: stylePreference,
-						custom_style_preference: customStylePreference
+						username: userName
 					};
 
 					success = true;
@@ -77,32 +70,7 @@
 			label="What do you want your username to be?"
 			disabled={saving}
 		/>
-		<TextInput
-			label="We just need phone # for verification"
-			name="phone"
-			bind:value={formData.phone}
-			placeholder="+6-666-6666"
-			disabled={saving}
-		/>
-		<SelectInput
-			label="How would you choose your style preference?"
-			name="style_preference"
-			bind:value={formData.style_preference}
-			disabled={saving}
-			options={[
-				{ label: 'Masculine', value: 'masculine' },
-				{ label: 'Feminine', value: 'feminine' },
-				{ label: 'Custom', value: 'custom' }
-			]}
-		/>
-		{#if formData.style_preference === 'custom'}
-			<TextInput
-				name="custom_style_preference"
-				label="Please describe your preference"
-				bind:value={formData.custom_style_preference}
-				disabled={saving}
-			/>
-		{/if}
+
 		{#if !saving}
 			<button
 				class="w-64 self-end rounded-full bg-rose-500 p-2 font-semibold text-white"

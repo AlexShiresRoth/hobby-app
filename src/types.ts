@@ -7,7 +7,8 @@ export const ResponseSchema = z.object({
 	social_aspect: z.string(),
 	time_commitement: z.string(),
 	resource_link: z.string(),
-	expense_amt: z.string()
+	expense_amt: z.string(),
+	living_environment: z.string()
 });
 
 export type HobbySuggestion = z.infer<typeof ResponseSchema>;
